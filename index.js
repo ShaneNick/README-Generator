@@ -1,25 +1,5 @@
-/*GIVEN a command-line application that accepts user input
-WHEN I am prompted for information about my application repository
-THEN a high-quality, professional README.md is generated with the title of my project and sections entitled Description, Table of Contents, Installation, Usage, License, Contributing, Tests, and Questions
-
-
-//WHEN I enter my project title
-THEN this is displayed as the title of the README
-WHEN I enter a description, installation instructions, usage information, contribution guidelines, and test instructions
-THEN this information is added to the sections of the README entitled Description, Installation, Usage, Contributing, and Tests
-WHEN I choose a license for my application from a list of options
-
-THEN a badge for that license is added near the top of the README and a notice is added to the section of the README entitled License that explains which license the application is covered under
-WHEN I enter my GitHub username
-THEN this is added to the section of the README entitled Questions, with a link to my GitHub profile
-WHEN I enter my email address
-THEN this is added to the section of the README entitled Questions, with instructions on how to reach me with additional questions
-WHEN I click on the links in the Table of Contents
-THEN I am taken to the corresponding section of the README*/
-
 const inquirer = require('inquirer'); //must be inquirer@7.3.3
 const fs = require('fs');
-
 
 const questions = [
     {
@@ -57,44 +37,79 @@ const questions = [
       name: 'license',
       message: 'Choose all licenses that apply:',
       choices: [
-        'MIT',
-        'BSD',
-        'GPL',
-        'None',
+        {name : 'MIT', value: 'MIT'},
+        {name : 'BSD', value: 'BSD'},
+        {name : 'GPL', value: 'GPL'},
+        {name : 'None', value: 'None'},
       ],
+    },
+    {
+      type: 'input',
+      name : 'githubUsername',
+      message: 'Please type your username',
+    },
+    {
+      type: 'input',
+      name : 'email',
+      message: 'Please enter your email', 
     },
   ];
   
-  function getLicenseInfo(license) {
-    let badge = '';
-    let notice = '';
+  const badgeMaps = {
+    MIT: 'img/download.png',
+    BSD: 'img/bsdBadge.png',
+    GPL: 'img/gplimg.png',
+    None: 'img/noLicense.png'
+  };
   
-    switch (license) {
-      case 'MIT':
-        badge =
-          '[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)';
-        notice = 'This project is licensed under the MIT License.';
-        break;
-      case 'BSD':
-        badge =
-          '[![License: BSD](https://img.shields.io/badge/License-BSD-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)';
-        notice = 'This project is licensed under the BSD License.';
-        break;
-      case 'GPL':
-        badge =
-          '[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)';
-        notice = 'This project is licensed under the GNU General Public License v3.0.';
-        break;
-      case 'None':
-        notice = 'This project is not licensed.';
-        break;
-      default:
-        break;
-    }
-  
-    return { badge, notice };
+function getLicenseBadgeMarkdown(license) {
+  const badgeFile = badgeMaps[license];
+  if (badgeFile) {
+    return `![${license} License](./img/${badgeFile})`;
+  } else {
+    return '';
   }
-  
-inquirer.prompt(questions).then((answers)=>{
-    console.log(answers);
-})
+}
+
+    //generate the README.md content
+function generateReadmeContent(answers) {
+  const licenseBadgeMarkdown = getLicenseBadgeMarkdown(answers.license);
+
+
+  return `${licenseBadgeMarkdown}
+
+## Project Title: 
+${answers.title}
+
+## Description:
+${answers.description}
+
+## Instalation:
+${answers.installation}
+
+## Usage:
+${answers.usageInformation}
+
+## License:
+${licenseBadgeMarkdown}
+
+This application is covered by the ${answers.license} license.
+
+## Contributions:
+${answers.contribution}
+
+## test Instructions:
+${answers.test}
+
+## Questions:
+If you have any questions, please contact me at ${answers.email}. You can also find me on GitHub at [${answers.githubUsername}](https://github.com/${answers.githubUsername}).
+`;
+}
+
+// Prompt the user for input and generate the README.md file
+inquirer.prompt(questions).then((answers) => {
+  const readmeContent = generateReadmeContent(answers);
+  fs.writeFileSync('README.md', readmeContent);
+  console.log('README.md file generated successfully!');
+});
+
